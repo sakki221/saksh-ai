@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Well, this is awkward...</title>
+    <style>
+        body {
+            background-color: #f4f4f9;
+            color: #333;
+            /* We are using a clean font, but fallback to Comic Sans just to trigger other devs */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Comic Sans MS', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 3rem;
+            color: #d9534f;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            line-height: 1.5;
+            color: #555;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border-radius: 10px;
+            /* Adding a subtle shadow to make the pain pop */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+        }
+        .excuse-box {
+            background: #fff;
+            border: 3px dashed #f0ad4e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 500px;
+            width: 100%;
+        }
+        .excuse-box h3 {
+            margin-top: 0;
+            color: #f0ad4e;
+        }
+        button {
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        #status-text {
+            font-style: italic;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Yeah, about that...</h1>
+    
+    <p>We <em>are</em> building something awesome, but our lead developer is currently trapped in a glass case of emotion. Please bear with us.</p>
+
+    <!-- The exact image you provided -->
+    <img src="image_1edf9d.png" alt="Frustrated 3D construction worker facepalming next to an Under Construction sign">
+
+    <div class="excuse-box">
+        <h3>Current Developer Status:</h3>
+        <p id="status-text">"I swear it worked on my local machine."</p>
+        <button onclick="changeExcuse()">Pester the Developer</button>
+    </div>
+
+    <script>
+        // An array of classic excuses for why the site isn't done yet
+        const excuses = [
+            "I'm compiling... check back later.",
+            "Waiting for DNS to propagate. It takes 48 years, right?",
+            "Someone tripped over the server cord.",
+            "I missed a single semicolon somewhere. Send help.",
+            "Currently Googling 'how to center a div' for the 400th time.",
+            "Stack Overflow is down. I am completely helpless.",
+            "The code is compiling. It's out of my hands now.",
+            "It's not a bug, it's an undocumented feature."
+        ];
+
+        // Function to randomly change the text when the button is clicked
+        function changeExcuse() {
+            const randomIndex = Math.floor(Math.random() * excuses.length);
+            document.getElementById('status-text').innerText = '"' + excuses[randomIndex] + '"';
+        }
+    </script>
+
+</body>
+</html>
