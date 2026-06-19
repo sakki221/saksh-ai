@@ -8,7 +8,6 @@
         body {
             background-color: #f4f4f9;
             color: #333;
-            /* We are using a clean font, but fallback to Comic Sans just to trigger other devs */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Comic Sans MS', sans-serif;
             display: flex;
             flex-direction: column;
@@ -36,7 +35,6 @@
             height: auto;
             margin: 20px 0;
             border-radius: 10px;
-            /* Adding a subtle shadow to make the pain pop */
             box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
         }
         .excuse-box {
@@ -78,7 +76,7 @@
 
     <h1>Yeah, about that...</h1>
     
-    <p>We <em>are</em> building something awesome, but our lead developer is currently trapped in a glass case of emotion. Please bear with us.</p>
+    <p>I <em>am</em> building something awesome, but this heavily caffeinated college student is currently trapped in a glass case of emotion. Please bear with me.</p>
 
     <!-- The exact image you provided -->
     <img src="image_1edf9d.png" alt="Frustrated 3D construction worker facepalming next to an Under Construction sign">
@@ -90,19 +88,18 @@
     </div>
 
     <script>
-        // An array of classic excuses for why the site isn't done yet
+        // Student-specific excuses
         const excuses = [
-            "I'm compiling... check back later.",
-            "Waiting for DNS to propagate. It takes 48 years, right?",
-            "Someone tripped over the server cord.",
-            "I missed a single semicolon somewhere. Send help.",
-            "Currently Googling 'how to center a div' for the 400th time.",
+            "Skipping a lecture right now to fix this bug.",
+            "Powered entirely by instant ramen and panic.",
+            "My professor said this would be a 'quick weekend project'.",
+            "I missed a single semicolon and now I'm questioning my major.",
+            "Currently Googling 'how to center a div' instead of studying for midterms.",
             "Stack Overflow is down. I am completely helpless.",
-            "The code is compiling. It's out of my hands now.",
-            "It's not a bug, it's an undocumented feature."
+            "I'll finish this right after my 8 AM class. Maybe.",
+            "It's not a bug, it's an undocumented feature for extra credit."
         ];
 
-        // Function to randomly change the text when the button is clicked
         function changeExcuse() {
             const randomIndex = Math.floor(Math.random() * excuses.length);
             document.getElementById('status-text').innerText = '"' + excuses[randomIndex] + '"';
