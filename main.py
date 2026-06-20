@@ -1,7 +1,7 @@
 """
-Local LLM Chat Server — single-file FastAPI application
-Serves Ollama (Qwen3 14B) to 3-4 users with JWT auth, SQLite history, and a built-in mobile-friendly web UI.
-Supports Google Gemini cloud models, Imagen 3 image generation, and PDF document parsing.
+Saksh AI — single-file FastAPI application
+Multi-model chat with Google Sign-In, SQLite history, SSE streaming, and a built-in web UI.
+Supports Ollama (local), Gemini (cloud), Cloudflare Workers AI, and Pollinations image generation.
 """
 
 from __future__ import annotations
@@ -290,7 +290,7 @@ class RegisterResponse(BaseModel):
 
 # ──────────────────────────── FastAPI app ───────────────────────────────
 
-app = FastAPI(title="Local LLM Chat Server")
+app = FastAPI(title="Saksh AI")
 
 
 @app.on_event("startup")
@@ -947,7 +947,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>LocalChat</title>
+<title>Saksh AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -990,19 +990,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
   .auth-logo span { color: var(--phosphor); }
   .auth-sub { font-family: var(--font-mono); color: var(--text-dim); font-size: .76rem; margin-bottom: 30px; letter-spacing: .03em; text-transform: uppercase; }
   .auth-card { background: var(--panel); border-radius: 10px; padding: 30px 28px; width: 100%; max-width: 380px; border: 1px solid var(--line); }
-  .auth-card label { display: block; font-family: var(--font-mono); font-size: .68rem; color: var(--text-dim); margin-bottom: 6px; letter-spacing: .08em; text-transform: uppercase; }
-  .auth-card input { width: 100%; padding: 10px 13px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); font-size: .92rem; font-family: var(--font-mono); transition: border-color .15s; }
-  .auth-card input:focus { outline: none; border-color: var(--phosphor-dim); }
-  .auth-btns { display: flex; gap: 8px; margin-top: 4px; }
-  .auth-btns button { flex: 1; padding: 10px 0; border: 1px solid transparent; border-radius: 6px; font-size: .82rem; font-weight: 600; font-family: var(--font-mono); cursor: pointer; transition: all .15s; letter-spacing: .02em; }
-  #btn-login  { background: var(--phosphor); color: #0d0f0d; }
-  #btn-login:hover { background: #92ed9a; }
-  #btn-register { background: transparent; color: var(--text-mid); border: 1px solid var(--line) !important; }
-  #btn-register:hover { background: var(--panel-raised); border-color: var(--line-bright) !important; }
   #auth-error { color: var(--red); font-family: var(--font-mono); font-size: .76rem; margin-top: 14px; min-height: 1.2em; text-align: center; }
-  .auth-divider { display: flex; align-items: center; gap: 12px; margin-top: 18px; color: var(--text-dim); font-size: .72rem; font-family: var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
-  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
-  .btn-google { width: 100%; margin-top: 12px; padding: 10px 0; border: 1px solid var(--line) !important; border-radius: 6px; background: transparent; color: var(--text); font-size: .82rem; font-weight: 600; font-family: var(--font-mono); cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: .02em; }
+  .btn-google { width: 100%; margin-top: 4px; padding: 12px 0; border: 1px solid var(--line) !important; border-radius: 6px; background: transparent; color: var(--text); font-size: .88rem; font-weight: 600; font-family: var(--font-mono); cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: .02em; }
   .btn-google:hover { background: var(--panel-raised); border-color: var(--line-bright) !important; }
   .btn-google svg { flex-shrink: 0; }
 
@@ -1180,19 +1169,10 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
 <!-- ══════════ AUTH ══════════ -->
 <div id="auth-screen" class="active">
-  <div class="auth-logo"><span class="dot"></span><span>Local</span>Chat</div>
-  <div class="auth-sub">Private inference &middot; your hardware</div>
+  <div class="auth-logo"><span class="dot"></span><span>Saksh</span> AI</div>
+  <div class="auth-sub">AI assistant &middot; cloud &amp; local models</div>
   <div class="auth-card">
-    <label for="username">Username</label>
-    <input id="username" type="text" autocomplete="username" placeholder="username" />
-    <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password" placeholder="password" />
-    <div class="auth-btns">
-      <button id="btn-login">Log in</button>
-      <button id="btn-register">Register</button>
-    </div>
     <div id="auth-error"></div>
-    <div class="auth-divider"><span>or</span></div>
     <button id="btn-google" class="btn-google">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.0 24.0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Sign in with Google
@@ -1204,7 +1184,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <div id="app">
   <div id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-brand"><span class="dot"></span><span>Local</span>Chat</div>
+      <div class="sidebar-brand"><span class="dot"></span><span>Saksh</span> AI</div>
       <button id="btn-new-chat" title="New chat">+</button>
     </div>
     <div class="sidebar-section"><div class="sidebar-section-title">Recent</div></div>
@@ -1214,7 +1194,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
         <div class="sidebar-avatar" id="sidebar-avatar">?</div>
         <div style="min-width:0;">
           <div class="sidebar-username" id="sidebar-username">User</div>
-          <div class="sidebar-plan">local &middot; private</div>
+          <div class="sidebar-plan">cloud &middot; local models</div>
         </div>
       </div>
       <button id="btn-logout">log out</button>
@@ -1260,16 +1240,12 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
   const authScreen   = document.getElementById("auth-screen");
   const app          = document.getElementById("app");
-  const usernameEl   = document.getElementById("username");
-  const passwordEl   = document.getElementById("password");
   const authError    = document.getElementById("auth-error");
   const messagesDiv  = document.getElementById("messages");
   const messagesInner= document.getElementById("messages-inner");
   const msgInput     = document.getElementById("msg-input");
   const btnSend      = document.getElementById("btn-send");
   const btnStop      = document.getElementById("btn-stop");
-  const btnLogin     = document.getElementById("btn-login");
-  const btnRegister  = document.getElementById("btn-register");
   const btnLogout    = document.getElementById("btn-logout");
   const btnNewChat   = document.getElementById("btn-new-chat");
   const btnMenuStatus= document.getElementById("btn-menu-status");
@@ -1350,30 +1326,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
     return res;
   }
 
-  async function doRegister() {
-    setAuthError("");
-    const form = new URLSearchParams({ username: usernameEl.value, password: passwordEl.value });
-    try {
-      const res = await fetch("/register", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: form });
-      if (!res.ok) { let msg = "Registration failed"; try { const d = await res.json(); msg = d.detail || msg; } catch(_) { msg = res.status + " error"; } setAuthError(msg); return; }
-      await doLogin();
-    } catch(e) { setAuthError(e.message); }
-  }
-  async function doLogin() {
-    setAuthError("");
-    const form = new URLSearchParams({ username: usernameEl.value, password: passwordEl.value });
-    try {
-      const res = await fetch("/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: form });
-      if (!res.ok) { let msg = "Login failed"; try { const d = await res.json(); msg = d.detail || msg; } catch(_) { msg = res.status + " error"; } setAuthError(msg); return; }
-      const data = await res.json();
-      token = data.access_token; currentUser = usernameEl.value;
-      localStorage.setItem("token", token); localStorage.setItem("username", currentUser);
-      showApp();
-    } catch(e) { setAuthError(e.message); }
-  }
-  btnLogin.addEventListener("click", doLogin);
-  btnRegister.addEventListener("click", doRegister);
-
   // ── Google Sign-In ──
   const btnGoogle = document.getElementById("btn-google");
   btnGoogle.addEventListener("click", () => {
@@ -1392,7 +1344,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
       setAuthError("Google sign-in failed: " + (e.data.error || "unknown error"));
     }
   });
-  [usernameEl, passwordEl].forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); }));
   btnLogout.addEventListener("click", () => { token = null; localStorage.removeItem("token"); chatHistory = []; showAuth(); });
 
   function escapeHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -1432,9 +1383,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
   function showWelcome() {
     messagesInner.innerHTML = `
       <div id="welcome">
-        <div class="welcome-icon">running locally</div>
+        <div class="welcome-icon">saksh ai</div>
         <div class="welcome-title">What can I help with?</div>
-        <div class="welcome-sub">Local inference, Gemini cloud models, image generation, and PDF document Q&A.</div>
+        <div class="welcome-sub">Cloud models, local inference, image generation, and PDF document Q&A.</div>
         <div class="welcome-cards">
           <div class="welcome-card" data-prompt="Write a Python script that organizes files by extension"><div class="wc-icon">CODE</div><div class="wc-label">Write code</div></div>
           <div class="welcome-card" data-prompt="Explain how neural networks learn, like I'm 15"><div class="wc-icon">LEARN</div><div class="wc-label">Learn something</div></div>
