@@ -21,7 +21,7 @@ from urllib.parse import quote
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, UploadFile, File, status
-from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 import bcrypt
@@ -327,8 +327,8 @@ async def login(form: OAuth2PasswordRequestForm = Depends()):
 @app.get("/auth/google")
 async def google_login():
     """Redirect to Google's OAuth consent screen."""
-    if not GOOGLE_CLIENT_ID:
-        raise HTTPException(status_code=400, detail="Google Sign-In is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.")
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        raise HTTPException(status_code=400, detail="Google Sign-In is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET env vars on Render.")
     from urllib.parse import urlencode
     params = urlencode({
         "client_id": GOOGLE_CLIENT_ID,
@@ -338,7 +338,7 @@ async def google_login():
         "access_type": "offline",
         "prompt": "select_account",
     })
-    return fastapi.responses.RedirectResponse(url=f"https://accounts.google.com/o/oauth2/v2/auth?{params}")
+    return RedirectResponse(url=f"https://accounts.google.com/o/oauth2/v2/auth?{params}")
 
 
 @app.get("/auth/google/callback")
