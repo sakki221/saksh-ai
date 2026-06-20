@@ -29,7 +29,7 @@ from pydantic import BaseModel
 
 # ──────────────────────────── Configuration ────────────────────────────
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")  # Set to ngrok URL for remote
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")  # Set to cloudflared tunnel URL for remote
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:14b")
 
 # ── Google Gemini cloud models (text only — image models are paid-only on free tier) ──
@@ -64,6 +64,7 @@ GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 # Auto-detect redirect URI based on environment
 # On Render: RENDER_EXTERNAL_URL is set automatically (e.g. https://my-app.onrender.com)
 # On local: falls back to localhost:8000
+# Cloudflare tunnel: cloudflared tunnel --url http://localhost:11434
 _RENDER_HOST = os.environ.get("RENDER_EXTERNAL_URL", "")
 GOOGLE_REDIRECT_URI = os.environ.get(
     "GOOGLE_REDIRECT_URI",
@@ -432,6 +433,12 @@ async def list_models(user: dict = Depends(get_current_user)):
     return {"models": local_models + cloud_models, "ollama_online": ollama_online}
 
 
+@app.api_route("/health", methods=["GET", "HEAD", "POST"])
+async def health():
+    """Lightweight health check — no auth required. Used by uptime monitors to keep the app awake."""
+    return {"status": "ok"}
+
+
 @app.get("/config")
 async def get_config(user: dict = Depends(get_current_user)):
     return {"num_ctx": NUM_CTX, "default_model": OLLAMA_MODEL, "keep_alive": KEEP_ALIVE}
@@ -578,7 +585,15 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
                 async with client.stream("POST", url, headers={"Content-Type": "application/json"}, json={"contents": gemini_contents}) as resp:
                     if resp.status_code != 200:
                         error_body = await resp.aread()
-                        yield f"data: {json.dumps({'error': error_body.decode()})}\n\n"
+                        # Parse Gemini error for a clean message
+                        try:
+                            err_json = json.loads(error_body.decode())
+                            err_msg = err_json.get("error", {}).get("message", error_body.decode()[:200])
+                            if "API_KEY_INVALID" in error_body.decode() or "API key not valid" in error_body.decode():
+                                err_msg = "Gemini API key is invalid. Check your GEMINI_API_KEY env variable."
+                        except:
+                            err_msg = error_body.decode()[:200]
+                        yield f"data: {json.dumps({'error': err_msg})}\n\n"
                         return
                     async for line in resp.aiter_lines():
                         if not line.startswith("data:"):
@@ -590,6 +605,14 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
                             chunk = json.loads(payload)
                         except json.JSONDecodeError:
                             continue
+                        # Check for error in SSE stream (Gemini sometimes returns errors with 200 status)
+                        if "error" in chunk and "candidates" not in chunk:
+                            err_obj = chunk.get("error", {})
+                            err_msg = err_obj.get("message", "Gemini API error")
+                            if "API_KEY_INVALID" in str(err_obj) or "API key not valid" in err_msg:
+                                err_msg = "Gemini API key is invalid. Check your GEMINI_API_KEY env variable."
+                            yield f"data: {json.dumps({'error': err_msg})}\n\n"
+                            return
                         candidates = chunk.get("candidates", [])
                         if not candidates:
                             continue
